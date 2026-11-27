@@ -1,66 +1,61 @@
-# Flashcard Quiz App
+# LinguaFlow - Interactive Language Learning Platform
 
-A responsive, client-side flashcard application designed for active recall, self-paced study, and quiz testing. Built with vanilla HTML5, CSS3, and JavaScript with no external runtime dependencies.
+LinguaFlow is a responsive language learning progressive web application (PWA) built for vocabulary acquisition, grammatical comprehension, and conversational practice across multiple languages.
 
 ---
 
 ## Features
 
-### Study & Active Recall
-- **Double-Sided Flashcards**: Card front presents the prompt or question; card back reveals the answer with a 3D flip animation.
-- **Sequential Navigation**: Previous and Next controls with boundary protection and progress tracking.
-- **Self-Assessment (Quiz Mode)**: Rate recall performance with "Need Review" and "Got It Right" buttons once the answer is revealed.
-- **Targeted Review**: Post-quiz summary calculates completion score and provides an option to immediately re-test only the missed questions.
-- **Deck Categorization**: Filter cards by subject or view the entire library across all decks.
-- **Speed Run Timer**: Optional per-card countdown that reveals the answer upon expiration.
+### 1. Conversational Dialogue Scenarios
+- Roleplay dialogues for contextual language acquisition:
+  - Café ordering (*Mateo the Barista*) & Hotel check-in (*Sofía the Receptionist*) in Spanish
+  - Boulangerie ordering (*Camille the Baker*) in French
+  - Café dialogue (*Lukas the Waiter*) in German
+  - Ramen shop dialogue (*Master Kenji*) in Japanese
+  - Pizzeria dialogue (*Marco the Pizzaiolo*) in Italian
+- Native speech synthesis on responses, suggested replies for beginners, and open-ended text input.
 
-### Audio & Accessibility
-- **Text-to-Speech**: Browser-native speech synthesis (`window.speechSynthesis`) to read card text aloud.
-- **Audio Feedback**: Synthesized sound cues powered by the Web Audio API for card flips, correct answers, review flags, and quiz completion.
-- **Theme Support**: Persistent light and dark color themes.
-- **Keyboard Shortcuts**: Full keyboard control for navigation, flipping, and assessment.
+### 2. Mistake Notebook & Remediation Drills
+- Automatically records questions answered incorrectly in quizzes or flagged during flashcard reviews.
+- Provides mistake frequency tracking and targeted review quizzes to reinforce weak areas.
 
-### Data Management
-- **Full Card CRUD**: Create, edit, and delete flashcards directly from the study viewport or the deck management drawer.
-- **Local Persistence**: State and preferences are saved to browser `localStorage`.
-- **Import & Export**: Backup and restore decks via standard JSON files or CSV spreadsheets.
-- **Offline Ready**: Progressive Web App manifest and Service Worker for offline operation.
+### 3. Custom Vocabulary Management
+- User-defined vocabulary and phrase creation with pronunciation guides, category tagging, and usage notes.
+- Custom entries are integrated into flashcard review sessions with speech synthesis support.
+
+### 4. Progressive Web App (PWA) Support
+- Offline caching via Service Worker (`sw.js`) and web app manifest (`manifest.json`) for standalone desktop and mobile installation.
+
+### 5. Keyboard Navigation
+- `Space`: Flip flashcard
+- `1`, `2`, `3`, `4`: Select quiz option or Spaced Repetition rating (Again, Hard, Good, Easy)
+- `R`: Replay pronunciation audio
+- `Enter`: Submit answer or proceed to next question
+
+### 6. Spaced Repetition (SRS) Flashcards
+- 3D card flip with translations, phonetics, example sentences, and adjustable speech rate (0.7x and 1.0x).
+- Speech recognition microphone testing for active pronunciation practice.
+
+### 7. Quiz Engine
+- Multiple choice quizzes with contextual explanations.
+- Listening comprehension drills with native audio playback.
+- Sentence builder challenges with word-tile rearrangement.
+- Timed speed matching game.
+
+### 8. Persistence & Cloud Synchronization
+- Local persistence via `localStorage` for XP, level progression, streaks, and card states.
+- JSON backup export and import for portable state management.
+- Configuration interface for Firebase Firestore synchronization.
 
 ---
 
-## Keyboard Shortcuts
+## Running the Application
 
-| Key | Context | Action |
-| --- | --- | --- |
-| `←` (Left Arrow) | Study / Quiz | Previous card |
-| `→` (Right Arrow) | Study / Quiz | Next card |
-| `Space` / `Enter` | Study / Quiz | Flip card / Show answer |
-| `1` | Quiz Mode (Flipped) | Mark as "Need Review" |
-| `2` | Quiz Mode (Flipped) | Mark as "Got It Right" |
-| `Esc` | Any | Close open modal or drawer |
-
----
-
-## Project Structure
-
-```text
-flashcard/
-├── index.html        # Application markup, modals, and accessible UI controls
-├── style.css         # Design tokens, responsive layout, and 3D card transforms
-├── app.js            # State management, Web Audio, Speech synthesis, and storage
-├── manifest.json     # PWA configuration
-├── sw.js             # Service worker asset caching
-└── README.md         # Project documentation
+### Local Python Server
+```powershell
+python server.py
 ```
+Serves the application on `http://localhost:8000` and opens the default browser.
 
----
-
-## Running Locally
-
-1. Clone or download the repository files.
-2. Open `index.html` directly in any modern web browser.
-3. Alternatively, serve via a local static web server:
-   ```bash
-   python -m http.server 8000
-   ```
-   and navigate to `http://localhost:8000`.
+### Direct File Open
+Open `index.html` directly in any modern web browser (Chrome, Edge, Firefox, or Safari).
