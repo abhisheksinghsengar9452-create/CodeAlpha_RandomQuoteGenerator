@@ -1,376 +1,771 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Flashcard Quiz App - Interactive Study & Quiz</title>
+  <title>LinguaFlow - Interactive Language Learning Platform</title>
+
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#4f46e5">
-  <link rel="stylesheet" href="style.css">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Language learning platform featuring spaced repetition flashcards, interactive dialogues, native pronunciations, and adaptive quizzes.">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
 
   <div class="app-container">
-    <header class="app-header">
-      <div class="brand">
-        <div class="brand-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-          </svg>
-        </div>
-        <div>
-          <h1>Flashcard Quiz</h1>
-          <p class="subtitle">Interactive Study & Self-Assessment</p>
-        </div>
+    
+    <aside class="sidebar" id="sidebar">
+      <div class="brand-header">
+        <div class="brand-icon">🌐</div>
+        <span class="brand-title">LinguaFlow</span>
+        <span class="brand-badge">Pro</span>
       </div>
 
-      <div class="header-actions">
-        <button id="soundToggleBtn" class="btn btn-icon" title="Toggle Sound Effects" aria-label="Toggle Sound Effects">
-          <span id="soundIcon">🔔</span>
-        </button>
-
-        <button id="themeToggleBtn" class="btn btn-icon" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
-          <span class="theme-icon light-icon">☀️</span>
-          <span class="theme-icon dark-icon">🌙</span>
-        </button>
-
-        <button id="openManageBtn" class="btn btn-secondary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="8" y1="6" x2="21" y2="6"></line>
-            <line x1="8" y1="12" x2="21" y2="12"></line>
-            <line x1="8" y1="18" x2="21" y2="18"></line>
-            <line x1="3" y1="6" x2="3.01" y2="6"></line>
-            <line x1="3" y1="12" x2="3.01" y2="12"></line>
-            <line x1="3" y1="18" x2="3.01" y2="18"></line>
-          </svg>
-          Manage (<span id="totalCardsHeader">0</span>)
-        </button>
-
-        <button id="openAddModalBtn" class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
-          Add Card
-        </button>
-      </div>
-    </header>
-
-    <!-- Deck selection and mode controls -->
-    <section class="control-strip">
-      <div class="deck-filter-wrapper">
-        <label for="deckSelect">Deck / Subject:</label>
-        <select id="deckSelect" class="styled-select" aria-label="Select Deck or Category">
-          <option value="all">All Decks (All Cards)</option>
+      <div class="lang-selector-box">
+        <div class="lang-selector-label">
+          <span>Target Language</span>
+        </div>
+        <select id="langSelectDropdown" class="lang-select-dropdown">
         </select>
       </div>
 
-      <div class="mode-toggles">
-        <div class="toggle-group" role="radiogroup" aria-label="Mode">
-          <button id="modeStudyBtn" class="toggle-btn active" data-mode="study" title="Free exploration mode">
-            📖 Study Mode
+      <nav class="nav-menu">
+        <a class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
+          <span class="text-lg">🏠</span>
+          <span>Home / Daily</span>
+        </a>
+        <a class="nav-item" data-tab="learn" onclick="switchTab('learn')">
+          <span class="text-lg">📚</span>
+          <span>Learn & Lessons</span>
+          <span class="nav-badge">Units</span>
+        </a>
+        <a class="nav-item" data-tab="flashcards" onclick="switchTab('flashcards')">
+          <span class="text-lg">🃏</span>
+          <span>3D Flashcards</span>
+          <span class="nav-badge">SRS</span>
+        </a>
+        <a class="nav-item" data-tab="quiz" onclick="switchTab('quiz')">
+          <span class="text-lg">🎯</span>
+          <span>Practice & Quizzes</span>
+        </a>
+        <a class="nav-item" data-tab="roleplay" onclick="switchTab('roleplay')">
+          <span class="text-lg">🤖</span>
+          <span>Dialogue Chat</span>
+          <span class="nav-badge bg-indigo-500/30 text-indigo-300">Live</span>
+        </a>
+        <a class="nav-item" data-tab="mistakes" onclick="switchTab('mistakes')">
+          <span class="text-lg">📓</span>
+          <span>Mistake Notebook</span>
+          <span class="nav-badge danger" id="mistakesCountBadge" style="display: none;">0</span>
+        </a>
+        <a class="nav-item" data-tab="custom-words" onclick="switchTab('custom-words')">
+          <span class="text-lg">➕</span>
+          <span>Custom Wordbook</span>
+        </a>
+        <a class="nav-item" data-tab="stats" onclick="switchTab('stats')">
+          <span class="text-lg">📈</span>
+          <span>Progress & Analytics</span>
+        </a>
+        <a class="nav-item" data-tab="settings" onclick="switchTab('settings')">
+          <span class="text-lg">⚙️</span>
+          <span>Settings & Sync</span>
+        </a>
+      </nav>
+
+      <div class="user-quick-profile">
+        <div class="streak-pill" title="Daily Streak">
+          <span>🔥</span>
+          <span id="userStreakCount">1 Days</span>
+        </div>
+        <div class="xp-pill" title="Total XP">
+          <span>⚡</span>
+          <span id="userXpCount">0 XP</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      
+      <header class="top-bar">
+        <div class="top-bar-left">
+          <button class="mobile-menu-btn" id="mobileMenuToggle" aria-label="Toggle Menu">
+            ☰
           </button>
-          <button id="modeQuizBtn" class="toggle-btn" data-mode="quiz" title="Self-assessment with scoring">
-            🎯 Quiz Mode
-          </button>
+          <div class="current-target-lang-tag">
+            <span class="current-lang-flag text-2xl">🇪🇸</span>
+            <span class="current-lang-name font-bold text-slate-100">Spanish</span>
+          </div>
         </div>
 
-        <button id="timerToggleBtn" class="btn btn-sm btn-outline-timer" title="Toggle 15s Speed Run Timer">
-          ⏱️ <span id="timerStatusText">Timer Off</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- Quiz session score tracking -->
-    <div id="quizScoreBanner" class="quiz-score-banner hidden">
-      <div class="score-stats">
-        <span class="badge-mastered">✅ Mastered: <b id="scoreMasteredCount">0</b></span>
-        <span class="badge-review">❌ Review: <b id="scoreReviewCount">0</b></span>
-        <span class="badge-pending">⏳ Remaining: <b id="scoreRemainingCount">0</b></span>
-      </div>
-      <div id="missedFilterNotice" class="missed-filter-notice hidden">
-        <span>⚠️ Reviewing Missed Cards Only</span>
-        <button id="exitMissedFilterBtn" class="btn-text">Exit to All Cards</button>
-      </div>
-    </div>
-
-    <!-- Countdown timer display -->
-    <div id="timerBarContainer" class="timer-bar-container hidden">
-      <div class="timer-meta">
-        <span>Time Remaining</span>
-        <span id="timerCountdownText" class="timer-seconds">15s</span>
-      </div>
-      <div class="timer-bar-track">
-        <div id="timerBarFill" class="timer-bar-fill"></div>
-      </div>
-    </div>
-
-    <!-- Flashcard study viewport -->
-    <main class="study-view" id="studyView">
-      <section class="deck-meta">
-        <div class="progress-info">
-          <span class="card-counter" id="cardCounter">Card 1 of 1</span>
-          <span class="category-badge" id="categoryBadge">General</span>
-        </div>
-        <div class="deck-tools">
-          <button id="ttsCurrentCardBtn" class="tool-btn" title="Speak text aloud (Web Speech API)">
-            <span id="ttsIcon">🔊</span>
-            <span id="ttsBtnLabel">Read Aloud</span>
-          </button>
-          <button id="shuffleBtn" class="tool-btn" title="Shuffle Cards">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="16 3 21 3 21 8"></polyline>
-              <line x1="4" y1="20" x2="21" y2="3"></line>
-              <polyline points="21 16 21 21 16 21"></polyline>
-              <line x1="15" y1="15" x2="21" y2="21"></line>
-              <line x1="4" y1="4" x2="9" y2="9"></line>
-            </svg>
-            Shuffle
-          </button>
-          <button id="resetDeckBtn" class="tool-btn" title="Restart to first card">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-              <path d="M3 3v5h5"></path>
-            </svg>
-            Restart
-          </button>
-          <button id="editCurrentCardBtn" class="tool-btn" title="Edit this card">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 20h9"></path>
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-            </svg>
-            Edit
-          </button>
-          <button id="deleteCurrentCardBtn" class="tool-btn delete-btn" title="Delete this card">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
-            Delete
-          </button>
-        </div>
-      </section>
-
-      <div class="progress-bar-container">
-        <div class="progress-bar-fill" id="progressBar"></div>
-      </div>
-
-      <!-- 3D transform card scene -->
-      <div class="card-scene">
-        <div class="flashcard" id="flashcard" tabindex="0" role="button" aria-label="Flashcard. Click or press space to flip.">
-          <div class="card-face card-front">
-            <div class="card-face-top">
-              <span class="card-tag">QUESTION</span>
-              <button class="card-inner-tts-btn" title="Listen to Question" aria-label="Read Question aloud" id="ttsFrontBtn">
-                🔊
-              </button>
-            </div>
-            <div class="card-content">
-              <p id="cardQuestionText" class="card-text">Loading question...</p>
-            </div>
-            <div class="card-hint">
-              <span>💡 Click card or "Show Answer" button below</span>
+        <div class="top-bar-right">
+          <div class="hidden sm:flex items-center gap-2 bg-slate-800/60 px-3 py-1.5 rounded-full border border-slate-700/60 text-xs">
+            <span class="text-slate-400 font-semibold">Daily Goal:</span>
+            <div class="w-20 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div id="dailyGoalProgressBar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 20%;"></div>
             </div>
           </div>
 
-          <div class="card-face card-back">
-            <div class="card-face-top">
-              <span class="card-tag answer-tag">ANSWER</span>
-              <button class="card-inner-tts-btn" title="Listen to Answer" aria-label="Read Answer aloud" id="ttsBackBtn">
-                🔊
-              </button>
-            </div>
-            <div class="card-content">
-              <p id="cardAnswerText" class="card-text">Loading answer...</p>
-            </div>
-            <div class="card-hint">
-              <span>💡 Click card to flip back to question</span>
-            </div>
+          <button class="icon-btn hidden md:flex" onclick="document.getElementById('shortcutsModal').classList.add('open')">
+            <span>⌨️</span>
+            <span>Shortcuts</span>
+          </button>
+
+          <div id="cloudSyncIndicator" class="sync-status-indicator" onclick="switchTab('settings')">
+            <span>☁️ Local Synced</span>
+          </div>
+
+          <div class="bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 px-3 py-1 rounded-full text-xs font-bold" id="userLevelBadge">
+            Lvl 1
           </div>
         </div>
-      </div>
+      </header>
 
-      <div class="study-controls">
-        <button id="prevBtn" class="btn btn-nav" title="Previous card (Left Arrow)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-          Previous
-        </button>
+      <div class="view-container">
 
-        <button id="flipBtn" class="btn btn-action" title="Toggle Question / Answer (Spacebar)">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <path d="M3 3v5h5"></path>
-            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
-            <path d="M21 21v-5h-5"></path>
-          </svg>
-          <span id="flipBtnText">Show Answer</span>
-        </button>
+        <!-- Dashboard View -->
+        <section id="view-dashboard" class="view-section active">
+          
+          <div class="hero-banner">
+            <div class="hero-text">
+              <h1>Welcome to <span class="text-indigo-400">LinguaFlow</span>!</h1>
+              <p>Master <span class="current-lang-name font-bold text-indigo-300">Spanish</span> through interactive flashcards, native audio pronunciation, situational dialogues, and adaptive quizzes.</p>
+              <div class="mt-4 flex flex-wrap gap-3">
+                <button class="btn btn-primary" onclick="switchTab('flashcards')">
+                  <span>🃏</span> Start Daily Flashcards
+                </button>
+                <button class="btn btn-secondary" onclick="switchTab('roleplay')">
+                  <span>🤖</span> Dialogue Practice
+                </button>
+                <button class="btn btn-secondary" onclick="startQuiz('multiple-choice')">
+                  <span>🎯</span> Quick 5-Min Quiz
+                </button>
+              </div>
+            </div>
+          </div>
 
-        <button id="nextBtn" class="btn btn-nav" title="Next card (Right Arrow)">
-          Next
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
-      </div>
+          <div class="stats-grid">
+            <div class="card stat-card">
+              <div class="stat-icon streak">🔥</div>
+              <div class="stat-info">
+                <h4>Day Streak</h4>
+                <div class="value" id="dashStreakCount">1d</div>
+              </div>
+            </div>
+            <div class="card stat-card">
+              <div class="stat-icon xp">⚡</div>
+              <div class="stat-info">
+                <h4>Total XP</h4>
+                <div class="value" id="dashXpCount">0</div>
+              </div>
+            </div>
+            <div class="card stat-card">
+              <div class="stat-icon words">📖</div>
+              <div class="stat-info">
+                <h4>Words Mastered</h4>
+                <div class="value" id="dashWordsCount">0</div>
+              </div>
+            </div>
+            <div class="card stat-card">
+              <div class="stat-icon accuracy">🎯</div>
+              <div class="stat-info">
+                <h4>Accuracy Rate</h4>
+                <div class="value" id="dashAccuracyCount">95%</div>
+              </div>
+            </div>
+          </div>
 
-      <!-- Self-assessment options shown when card answer is visible -->
-      <div id="quizAssessmentSection" class="quiz-assessment-section hidden">
-        <p class="assessment-title">Did you answer correctly?</p>
-        <div class="assessment-buttons">
-          <button id="markWrongBtn" class="btn btn-assessment btn-wrong" title="Need Review (Shortcut: 1)">
-            ❌ Need Review <kbd>1</kbd>
-          </button>
-          <button id="markCorrectBtn" class="btn btn-assessment btn-correct" title="Got It Right (Shortcut: 2)">
-            ✅ Got It Right <kbd>2</kbd>
-          </button>
-        </div>
-      </div>
+          <div id="dashDialogueBox"></div>
 
-      <div class="shortcuts-legend">
-        <span><kbd>←</kbd> Prev</span>
-        <span><kbd>Space</kbd> / <kbd>Enter</kbd> Flip</span>
-        <span><kbd>→</kbd> Next</span>
-        <span class="quiz-legend hidden" id="quizKeyLegend"><kbd>1</kbd> Review &nbsp; <kbd>2</kbd> Mastered</span>
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="section-title mb-0">Daily Structured Learning Path</h2>
+            <span class="text-xs text-indigo-400 font-bold uppercase tracking-wider">Step-by-Step</span>
+          </div>
+          <div class="lessons-track-grid" id="dailyLessonsTrack">
+          </div>
+
+        </section>
+
+        <!-- Lessons & Curriculum View -->
+        <section id="view-learn" class="view-section">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold">Curriculum & Category Units</h2>
+              <p class="text-sm text-slate-400">Explore vocabulary, idiomatic expressions, sentence building, and grammar breakdowns.</p>
+            </div>
+          </div>
+
+          <div class="category-filter-tabs">
+            <button class="cat-tab-btn cat-filter-btn active" data-category="all" onclick="filterCategory('all')">
+              🌟 All Content
+            </button>
+            <button class="cat-tab-btn cat-filter-btn" data-category="vocabulary" onclick="filterCategory('vocabulary')">
+              🗣️ Vocabulary
+            </button>
+            <button class="cat-tab-btn cat-filter-btn" data-category="phrases" onclick="filterCategory('phrases')">
+              💬 Phrases & Travel
+            </button>
+            <button class="cat-tab-btn cat-filter-btn" data-category="sentences" onclick="filterCategory('sentences')">
+              ✍️ Sentence Practice
+            </button>
+            <button class="cat-tab-btn cat-filter-btn" data-category="grammar" onclick="filterCategory('grammar')">
+              📖 Grammar Rules
+            </button>
+          </div>
+
+          <div class="content-grid" id="learnContentGrid">
+          </div>
+        </section>
+
+        <!-- 3D Flashcards (Spaced Repetition) View -->
+        <section id="view-flashcards" class="view-section">
+          <div class="flashcards-container">
+            
+            <div class="flashcard-controls-top">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider" id="fcIndexIndicator">1 / 15</span>
+              <div class="flashcard-progress-bar">
+                <div class="flashcard-progress-fill" id="fcProgressFill" style="width: 10%;"></div>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="initFlashcardsView()">
+                🔀 Shuffle Deck
+              </button>
+            </div>
+
+            <div class="flashcard-scene" onclick="flipFlashcard()">
+              <div class="flashcard-inner" id="flashcardInner">
+                
+                <div class="flashcard-face flashcard-front">
+                  <span class="flashcard-hint-badge" id="fcTag">Vocabulary</span>
+                  <div class="flashcard-target-text" id="fcTargetText">Hola</div>
+                  <div class="flashcard-phonetic-text" id="fcPhoneticText">OH-lah</div>
+                  
+                  <div class="flashcard-audio-center" onclick="event.stopPropagation()">
+                    <button class="audio-btn" title="Slow Pronunciation (0.7x)" onclick="playFlashcardAudio(0.7, event)">
+                      🐢 Slow
+                    </button>
+                    <button class="audio-btn" title="Native Pronunciation (1.0x)" onclick="playFlashcardAudio(1.0, event)">
+                      🔊 Native
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="fcMicBtn" onclick="testSpeakingFlashcard(event)">
+                      🎤 Test Pronunciation
+                    </button>
+                  </div>
+
+                  <div class="flashcard-tap-hint">
+                    <span>🔄 Click or press <span class="key-kbd">Space</span> to flip card</span>
+                  </div>
+                </div>
+
+                <div class="flashcard-face flashcard-back">
+                  <span class="flashcard-hint-badge">English Translation</span>
+                  <div class="flashcard-trans-text" id="fcTransText">Hello</div>
+                  
+                  <div class="flashcard-example-box">
+                    <p class="font-bold text-slate-200" id="fcExampleTarget">¡Hola! ¿Cómo estás?</p>
+                    <p class="text-sm text-slate-400 mt-1" id="fcExampleTrans">Hello! How are you?</p>
+                  </div>
+
+                  <div class="flashcard-tap-hint">
+                    <span>🔄 Click to flip back</span>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="srs-buttons-panel">
+              <button class="srs-btn again" onclick="handleSrsRating('again')">
+                <span class="srs-name">Again (1)</span>
+                <span class="srs-time">&lt; 1 min</span>
+              </button>
+              <button class="srs-btn hard" onclick="handleSrsRating('hard')">
+                <span class="srs-name">Hard (2)</span>
+                <span class="srs-time">2 days</span>
+              </button>
+              <button class="srs-btn good" onclick="handleSrsRating('good')">
+                <span class="srs-name">Good (3)</span>
+                <span class="srs-time">4 days</span>
+              </button>
+              <button class="srs-btn easy" onclick="handleSrsRating('easy')">
+                <span class="srs-name">Easy (4)</span>
+                <span class="srs-time">7 days</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Quizzes & Tests View -->
+        <section id="view-quiz" class="view-section">
+          
+          <div id="quizModeSelectorView">
+            <div class="mb-6">
+              <h2 class="text-2xl font-extrabold">Practice Arena & Knowledge Tests</h2>
+              <p class="text-sm text-slate-400">Choose a quiz mode to test and reinforce your language retention.</p>
+            </div>
+
+            <div class="quiz-modes-grid">
+              <div class="quiz-mode-card" onclick="startQuiz('multiple-choice')">
+                <div class="quiz-mode-icon">🎯</div>
+                <h3>Multiple Choice Quiz</h3>
+                <p>Translate words and phrases under multiple choice format with instant explanations.</p>
+                <button class="btn btn-primary btn-sm">Start Challenge</button>
+              </div>
+
+              <div class="quiz-mode-card" onclick="startQuiz('listening')">
+                <div class="quiz-mode-icon">🎧</div>
+                <h3>Listening Comprehension</h3>
+                <p>Train your ear with native pronunciation audio and identify the spoken sentences.</p>
+                <button class="btn btn-primary btn-sm">Start Challenge</button>
+              </div>
+
+              <div class="quiz-mode-card" onclick="startQuiz('sentence-builder')">
+                <div class="quiz-mode-icon">🧩</div>
+                <h3>Sentence Builder</h3>
+                <p>Tap and arrange word tiles in correct grammatical order to form full sentences.</p>
+                <button class="btn btn-primary btn-sm">Start Challenge</button>
+              </div>
+
+              <div class="quiz-mode-card" onclick="startQuiz('speed-match')">
+                <div class="quiz-mode-icon">⚡</div>
+                <h3>Speed Match Game</h3>
+                <p>Quickly match vocabulary words with their translations before time runs out.</p>
+                <button class="btn btn-primary btn-sm">Start Challenge</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="activeQuizContainer" class="active-quiz-wrapper" style="display: none;">
+            
+            <div class="quiz-header">
+              <div class="flex items-center gap-3">
+                <button class="btn btn-secondary btn-sm" onclick="renderQuizModeSelection()">
+                  ✕ Exit Quiz
+                </button>
+                <span class="text-xs font-bold text-slate-400" id="quizProgressText">Question 1 of 5</span>
+              </div>
+              <div class="quiz-lives-streak">
+                <span class="quiz-streak-counter" id="quizStreakDisplay">🔥 0</span>
+              </div>
+            </div>
+
+            <div class="flashcard-progress-bar mb-6 mx-0">
+              <div class="flashcard-progress-fill" id="quizProgressBar" style="width: 20%;"></div>
+            </div>
+
+            <div class="question-box" id="quizQuestionContent"></div>
+
+            <div id="quizFeedbackBox" class="quiz-feedback-box" style="display: none;"></div>
+
+            <div class="flex justify-end">
+              <button class="btn btn-primary" id="quizNextBtn" style="display: none;" onclick="nextQuizQuestion()">
+                Continue (Enter) ➔
+              </button>
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- Conversational Dialogue View -->
+        <section id="view-roleplay" class="view-section">
+          <div class="roleplay-container">
+            
+            <div class="roleplay-scenario-header">
+              <div class="flex items-center gap-3">
+                <div class="chat-avatar text-2xl" id="roleplayPartnerAvatar">☕</div>
+                <div>
+                  <h3 class="font-bold text-base text-slate-100" id="roleplayPartnerName">Mateo (Barista)</h3>
+                  <p class="text-xs text-slate-400" id="roleplayPartnerDesc">Practice ordering coffee in conversational Spanish.</p>
+                </div>
+              </div>
+
+              <select id="roleplayScenarioSelector" class="text-input-field w-auto text-xs py-1.5 px-3" onchange="selectRoleplayScenario(this.value)">
+              </select>
+            </div>
+
+            <div class="chat-history-box" id="roleplayChatHistory"></div>
+
+            <div class="chat-suggested-pills" id="roleplaySuggestions"></div>
+
+            <div class="chat-input-row">
+              <input type="text" id="roleplayCustomInput" class="text-input-field flex-1" placeholder="Type your reply in target language or select a suggestion above...">
+              <button class="btn btn-primary" onclick="handleSendRoleplayMessage()">
+                <span>Send</span>
+                <span>➔</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- Mistake Notebook View -->
+        <section id="view-mistakes" class="view-section">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold flex items-center gap-2">
+                <span>📓</span> Mistake Notebook
+              </h2>
+              <p class="text-sm text-slate-400">Questions or flashcards you struggled with are auto-saved here for focused review.</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+              <span class="text-xs font-bold text-slate-400" id="mistakesTotalCount">0 items</span>
+              <button class="btn btn-primary btn-sm" onclick="startMistakePracticeDrill()">
+                ⚡ Practice All Mistakes
+              </button>
+            </div>
+          </div>
+
+          <div class="content-grid" id="mistakesListContainer">
+          </div>
+        </section>
+
+        <!-- Custom Vocabulary View -->
+        <section id="view-custom-words" class="view-section">
+          <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+              <h2 class="text-2xl font-extrabold flex items-center gap-2">
+                <span>➕</span> Personal Vocabulary Deck
+              </h2>
+              <p class="text-sm text-slate-400">Create custom words and phrases. They are automatically added to flashcards and speech pronunciation.</p>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('customWordModal').classList.add('open')">
+              + Add Custom Word
+            </button>
+          </div>
+
+          <div class="content-grid" id="customWordsListGrid">
+          </div>
+        </section>
+
+        <!-- Progress & Analytics View -->
+        <section id="view-stats" class="view-section">
+          <div class="mb-6">
+            <h2 class="text-2xl font-extrabold">Learning Analytics & Milestones</h2>
+            <p class="text-sm text-slate-400">Detailed breakdown of your vocabulary growth, practice streaks, and unit mastery.</p>
+          </div>
+
+          <div class="progress-overview-grid">
+            <div class="card level-progress-card">
+              <div class="level-header">
+                <div>
+                  <h3 class="text-xl font-bold">Proficiency Level</h3>
+                  <p class="text-sm text-slate-400">Earn XP by completing quizzes and daily flashcards.</p>
+                </div>
+                <div class="level-badge-large" id="statsCurrentLevel">Level 1</div>
+              </div>
+
+              <div class="stats-grid mb-0">
+                <div class="p-3 bg-slate-900/50 rounded-lg border border-slate-700/60">
+                  <span class="text-xs text-slate-400 uppercase font-bold">Total XP</span>
+                  <div class="text-2xl font-black text-indigo-400" id="statsTotalXp">0</div>
+                </div>
+                <div class="p-3 bg-slate-900/50 rounded-lg border border-slate-700/60">
+                  <span class="text-xs text-slate-400 uppercase font-bold">Day Streak</span>
+                  <div class="text-2xl font-black text-amber-400" id="statsStreakDays">1 Days</div>
+                </div>
+                <div class="p-3 bg-slate-900/50 rounded-lg border border-slate-700/60">
+                  <span class="text-xs text-slate-400 uppercase font-bold">Mastered Words</span>
+                  <div class="text-2xl font-black text-emerald-400" id="statsWordsLearned">0</div>
+                </div>
+              </div>
+
+              <div class="mt-6">
+                <h4 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Unit Mastery By Category</h4>
+                <div class="mastery-bars-list" id="categoryMasteryList"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3 class="text-lg font-bold mb-4">🏆 Achievements</h3>
+              <div class="space-y-3">
+                <div class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-lg border border-slate-700/60">
+                  <span class="text-2xl">🔥</span>
+                  <div>
+                    <h5 class="font-bold text-sm">Streak Starter</h5>
+                    <p class="text-xs text-slate-400">Complete lessons 3 days in a row</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-lg border border-slate-700/60">
+                  <span class="text-2xl">🎯</span>
+                  <div>
+                    <h5 class="font-bold text-sm">Quiz Sharpshooter</h5>
+                    <p class="text-xs text-slate-400">Score 100% on any practice test</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-3 p-3 bg-slate-800/40 rounded-lg border border-slate-700/60">
+                  <span class="text-2xl">🗣️</span>
+                  <div>
+                    <h5 class="font-bold text-sm">Polyglot Explorer</h5>
+                    <p class="text-xs text-slate-400">Master words across multiple languages</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Settings & Sync View -->
+        <section id="view-settings" class="view-section">
+          <div class="mb-6">
+            <h2 class="text-2xl font-extrabold">Preferences & Data Synchronization</h2>
+            <p class="text-sm text-slate-400">Configure speech pronunciation, appearance, and sync with Firebase or Local Storage.</p>
+          </div>
+
+          <div class="max-w-3xl space-y-6">
+            
+            <div class="card settings-section-card">
+              <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                <span>🔊</span> Audio & Pronunciation Preferences
+              </h3>
+
+              <div class="settings-row">
+                <div class="settings-meta">
+                  <h4>Auto-Pronounce Cards</h4>
+                  <p>Automatically read words aloud upon viewing or flipping flashcards.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="settingAutoPronounce" onchange="handleSettingChange('autoPronounce', this.checked)">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-meta">
+                  <h4>Sound Effects (SFX)</h4>
+                  <p>Play pleasant chimes and audio feedback on quiz answers.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="settingSfx" onchange="handleSettingChange('sfxEnabled', this.checked)">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-meta">
+                  <h4>Speech Recognition (Microphone)</h4>
+                  <p>Practice speaking words and receive real-time pronunciation matching.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="settingSpeechRecognition" onchange="handleSettingChange('speechRecognitionEnabled', this.checked)">
+                  <span class="slider"></span>
+                </label>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-meta">
+                  <h4>Default Speech Speed</h4>
+                  <p>Adjust the playback tempo of native pronunciations.</p>
+                </div>
+                <select id="settingSpeechSpeed" class="text-input-field w-36" onchange="handleSettingChange('voiceSpeed', parseFloat(this.value))">
+                  <option value="0.7">0.7x (Slow)</option>
+                  <option value="0.85">0.85x (Learner)</option>
+                  <option value="1">1.0x (Normal)</option>
+                  <option value="1.15">1.15x (Fast)</option>
+                </select>
+              </div>
+
+              <div class="settings-row">
+                <div class="settings-meta">
+                  <h4>Daily XP Target</h4>
+                  <p>Customize your personal daily study goal.</p>
+                </div>
+                <select id="settingDailyGoal" class="text-input-field w-36" onchange="handleUserGoalChange(parseInt(this.value, 10))">
+                  <option value="30">30 XP (Casual)</option>
+                  <option value="50">50 XP (Standard)</option>
+                  <option value="100">100 XP (Intense)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="card settings-section-card">
+              <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                <span>🎨</span> Appearance
+              </h3>
+              <div class="settings-row">
+                <div class="settings-meta">
+                  <h4>Light Mode</h4>
+                  <p>Toggle between Dark mode and Light mode UI theme.</p>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="settingTheme" onchange="handleSettingChange('theme', this.checked ? 'light' : 'dark')">
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="card settings-section-card">
+              <h3 class="text-lg font-bold mb-3 flex items-center gap-2">
+                <span>☁️</span> Data Storage & Cloud Backend (Firebase)
+              </h3>
+              <p class="text-sm text-slate-400 mb-4">
+                Your learning progress is automatically saved locally. You can also export JSON backups or connect to a <strong>Firebase Firestore</strong> backend to sync progress across devices.
+              </p>
+
+              <div class="flex flex-wrap gap-3 mb-6">
+                <button class="btn btn-secondary btn-sm" onclick="StorageManager.exportBackup()">
+                  💾 Export JSON Backup
+                </button>
+                <label class="btn btn-secondary btn-sm cursor-pointer">
+                  📥 Import JSON Backup
+                  <input type="file" id="backupFileInput" accept=".json" class="hidden">
+                </label>
+              </div>
+
+              <div class="border-t border-slate-700/60 pt-4">
+                <h4 class="font-bold text-sm mb-2 text-slate-200">Firebase Configuration JSON:</h4>
+                <p class="text-xs text-slate-400 mb-3">Optional: Paste your Firebase web app config object below to enable live cloud Firestore sync.</p>
+                
+                <textarea id="firebaseConfigTextarea" class="textarea-field" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "my-app.firebaseapp.com",
+  "projectId": "my-app",
+  "storageBucket": "my-app.appspot.com"
+}'></textarea>
+
+                <div class="mt-3 flex gap-2">
+                  <button class="btn btn-primary btn-sm" onclick="handleSaveFirebaseConfig()">
+                    Save & Test Firebase Sync
+                  </button>
+                </div>
+              </div>
+
+              <div class="border-t border-slate-700/60 mt-6 pt-4 flex items-center justify-between">
+                <div>
+                  <h4 class="text-sm font-bold text-red-400">Reset Learning Data</h4>
+                  <p class="text-xs text-slate-400">Clear all words learned, level progress, streaks, and quiz records.</p>
+                </div>
+                <button class="btn btn-secondary btn-sm text-red-400 border-red-500/40 hover:bg-red-500/20" onclick="resetAllData()">
+                  Reset Everything
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
       </div>
     </main>
 
-    <!-- Empty state view -->
-    <div class="empty-state hidden" id="emptyState">
-      <div class="empty-icon">🎴</div>
-      <h2>No flashcards in this deck!</h2>
-      <p id="emptyStateDesc">Create your first flashcard or restore the default sample deck to start studying.</p>
-      <div class="empty-actions">
-        <button id="emptyAddBtn" class="btn btn-primary">+ Add New Card</button>
-        <button id="restoreDefaultsBtn" class="btn btn-secondary">Restore Sample Deck</button>
-      </div>
-    </div>
   </div>
 
-  <!-- Quiz completion modal -->
-  <div class="modal-backdrop hidden" id="resultsModal">
-    <div class="modal-dialog results-dialog" role="dialog" aria-modal="true" aria-labelledby="resultsTitle">
-      <div class="modal-header">
-        <h3 id="resultsTitle">🎉 Quiz Completed!</h3>
+  <div class="modal-overlay" id="customWordModal">
+    <div class="modal-content text-left">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-bold">➕ Add Custom Word</h3>
+        <button class="text-slate-400 hover:text-white" onclick="document.getElementById('customWordModal').classList.remove('open')">✕</button>
       </div>
-      <div class="modal-body text-center">
-        <div class="score-circle">
-          <span id="scorePercentage" class="score-percent">100%</span>
-          <span class="score-label">Score</span>
-        </div>
-        <p id="scoreFeedbackText" class="score-feedback">Outstanding job! You mastered every card!</p>
-        
-        <div class="results-stats-grid">
-          <div class="stat-box stat-mastered">
-            <span class="stat-number" id="finalMasteredCount">0</span>
-            <span class="stat-label">Mastered</span>
-          </div>
-          <div class="stat-box stat-review">
-            <span class="stat-number" id="finalReviewCount">0</span>
-            <span class="stat-label">Need Review</span>
-          </div>
-          <div class="stat-box stat-total">
-            <span class="stat-number" id="finalTotalCount">0</span>
-            <span class="stat-label">Total Cards</span>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer results-footer">
-        <button id="reviewMissedCardsBtn" class="btn btn-secondary hidden">
-          🔁 Review Missed Cards (<span id="missedBtnCount">0</span>)
-        </button>
-        <button id="restartQuizBtn" class="btn btn-primary">
-          🔄 Retake Full Quiz
-        </button>
-        <button id="closeResultsModalBtn" class="btn btn-secondary">
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
 
-  <!-- Card editor modal -->
-  <div class="modal-backdrop hidden" id="cardModal">
-    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-      <div class="modal-header">
-        <h3 id="modalTitle">Add New Flashcard</h3>
-        <button id="closeModalBtn" class="btn-close" aria-label="Close dialog">&times;</button>
-      </div>
-      <form id="cardForm" class="modal-body">
-        <input type="hidden" id="cardIdInput" value="">
-        <div class="form-group">
-          <label for="cardCategoryInput">Deck / Subject</label>
-          <input type="text" id="cardCategoryInput" placeholder="e.g., Web Development, Science, History" maxlength="40" list="existingCategoriesList">
-          <datalist id="existingCategoriesList">
-          </datalist>
+      <form id="customWordForm" onsubmit="handleAddCustomWordSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Target Word or Phrase *</label>
+          <input type="text" id="customWordTarget" class="text-input-field" placeholder="e.g. La biblioteca" required>
         </div>
-        <div class="form-group">
-          <label for="cardQuestionInput">Question (Front) <span class="required">*</span></label>
-          <textarea id="cardQuestionInput" rows="4" placeholder="Enter your question or prompt..." required></textarea>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">English Translation *</label>
+          <input type="text" id="customWordTrans" class="text-input-field" placeholder="e.g. The library" required>
         </div>
-        <div class="form-group">
-          <label for="cardAnswerInput">Answer (Back) <span class="required">*</span></label>
-          <textarea id="cardAnswerInput" rows="4" placeholder="Enter the answer or explanation..." required></textarea>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Phonetic Guide (Optional)</label>
+          <input type="text" id="customWordPhonetic" class="text-input-field" placeholder="e.g. lah bee-blyoh-TEH-kah">
         </div>
-        <div class="modal-footer">
-          <button type="button" id="cancelModalBtn" class="btn btn-secondary">Cancel</button>
-          <button type="submit" id="saveCardBtn" class="btn btn-primary">Save Card</button>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Category</label>
+          <select id="customWordCategory" class="text-input-field">
+            <option value="vocabulary">Vocabulary</option>
+            <option value="phrases">Phrases & Travel</option>
+            <option value="sentences">Sentences</option>
+            <option value="slang">Slang / Idioms</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Usage Notes / Example</label>
+          <input type="text" id="customWordNotes" class="text-input-field" placeholder="e.g. Useful when asking for books or quiet spaces.">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('customWordModal').classList.remove('open')">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm">Save Word</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- Deck manager drawer -->
-  <div class="drawer-backdrop hidden" id="manageDrawer">
-    <div class="drawer-dialog" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
-      <div class="drawer-header">
-        <div>
-          <h3 id="drawerTitle">Deck Management</h3>
-          <p class="drawer-subtitle">Manage, search, export and import your study decks</p>
+  <div class="modal-overlay" id="shortcutsModal">
+    <div class="modal-content">
+      <div class="modal-icon-badge">⌨️</div>
+      <h3 class="modal-title">Keyboard Shortcuts</h3>
+      <p class="modal-subtitle">Navigate and practice without touching your mouse!</p>
+
+      <div class="space-y-3 text-left mb-6 max-w-sm mx-auto">
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-700/60">
+          <span class="text-sm">Flip Flashcard</span>
+          <span class="key-kbd">Space</span>
         </div>
-        <button id="closeDrawerBtn" class="btn-close" aria-label="Close deck manager">&times;</button>
-      </div>
-      
-      <div class="drawer-toolbar">
-        <div class="search-box">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input type="text" id="searchCardsInput" placeholder="Search cards by question, answer, deck...">
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-700/60">
+          <span class="text-sm">Select Quiz Option 1 - 4</span>
+          <div><span class="key-kbd">1</span> <span class="key-kbd">2</span> <span class="key-kbd">3</span> <span class="key-kbd">4</span></div>
         </div>
-        <div class="drawer-actions">
-          <button id="exportJsonBtn" class="btn btn-sm btn-secondary" title="Export cards as JSON">Export JSON</button>
-          <button id="exportCsvBtn" class="btn btn-sm btn-secondary" title="Export cards as CSV spreadsheet">Export CSV</button>
-          <label class="btn btn-sm btn-secondary" title="Import cards from JSON or CSV" style="cursor: pointer; margin-bottom: 0;">
-            Import File
-            <input type="file" id="importDeckInput" accept=".json,.csv" style="display: none;">
-          </label>
-          <button id="drawerAddCardBtn" class="btn btn-sm btn-primary">+ Add Card</button>
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-700/60">
+          <span class="text-sm">SRS Rating (Again / Hard / Good / Easy)</span>
+          <div><span class="key-kbd">1</span> .. <span class="key-kbd">4</span></div>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-700/60">
+          <span class="text-sm">Replay Audio Pronunciation</span>
+          <span class="key-kbd">R</span>
+        </div>
+        <div class="flex justify-between items-center py-1.5 border-b border-slate-700/60">
+          <span class="text-sm">Next Question / Submit</span>
+          <span class="key-kbd">Enter</span>
         </div>
       </div>
 
-      <div class="drawer-body">
-        <div class="card-list" id="cardListContainer">
-        </div>
-      </div>
-
-      <div class="drawer-footer">
-        <button id="drawerRestoreBtn" class="btn btn-sm btn-secondary">Restore Sample Deck</button>
-        <button id="clearAllBtn" class="btn btn-sm btn-danger">Delete All Cards</button>
-      </div>
+      <button class="btn btn-primary w-full" onclick="document.getElementById('shortcutsModal').classList.remove('open')">
+        Got it!
+      </button>
     </div>
   </div>
 
-  <div id="toast" class="toast hidden"></div>
+  <div class="modal-overlay" id="quizCompleteModal">
+    <div class="modal-content">
+      <div class="modal-icon-badge">🎉</div>
+      <h3 class="modal-title">Quiz Completed!</h3>
+      <p class="modal-subtitle">Great job pushing your language skills forward today.</p>
 
+      <div class="modal-score-pills">
+        <div class="score-pill-item">
+          <span class="val" id="modalScorePercent">100%</span>
+          <span class="lbl">Accuracy</span>
+        </div>
+        <div class="score-pill-item">
+          <span class="val" id="modalXpEarned">+75 XP</span>
+          <span class="lbl">Earned</span>
+        </div>
+        <div class="score-pill-item">
+          <span class="val" id="modalStreakHigh">5</span>
+          <span class="lbl">Max Streak</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary w-full" onclick="closeQuizModal()">
+        Back to Dashboard
+      </button>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
