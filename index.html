@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcard Quiz App - Interactive Study & Quiz</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+  <div class="app-container">
+    <header class="app-header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>Flashcard Quiz</h1>
+          <p class="subtitle">Interactive Study & Self-Assessment</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="soundToggleBtn" class="btn btn-icon" title="Toggle Sound Effects" aria-label="Toggle Sound Effects">
+          <span id="soundIcon">🔔</span>
+        </button>
+
+        <button id="themeToggleBtn" class="btn btn-icon" title="Toggle Light/Dark Theme" aria-label="Toggle Theme">
+          <span class="theme-icon light-icon">☀️</span>
+          <span class="theme-icon dark-icon">🌙</span>
+        </button>
+
+        <button id="openManageBtn" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          Manage (<span id="totalCardsHeader">0</span>)
+        </button>
+
+        <button id="openAddModalBtn" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Card
+        </button>
+      </div>
+    </header>
+
+    <!-- Deck selection and mode controls -->
+    <section class="control-strip">
+      <div class="deck-filter-wrapper">
+        <label for="deckSelect">Deck / Subject:</label>
+        <select id="deckSelect" class="styled-select" aria-label="Select Deck or Category">
+          <option value="all">All Decks (All Cards)</option>
+        </select>
+      </div>
+
+      <div class="mode-toggles">
+        <div class="toggle-group" role="radiogroup" aria-label="Mode">
+          <button id="modeStudyBtn" class="toggle-btn active" data-mode="study" title="Free exploration mode">
+            📖 Study Mode
+          </button>
+          <button id="modeQuizBtn" class="toggle-btn" data-mode="quiz" title="Self-assessment with scoring">
+            🎯 Quiz Mode
+          </button>
+        </div>
+
+        <button id="timerToggleBtn" class="btn btn-sm btn-outline-timer" title="Toggle 15s Speed Run Timer">
+          ⏱️ <span id="timerStatusText">Timer Off</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Quiz session score tracking -->
+    <div id="quizScoreBanner" class="quiz-score-banner hidden">
+      <div class="score-stats">
+        <span class="badge-mastered">✅ Mastered: <b id="scoreMasteredCount">0</b></span>
+        <span class="badge-review">❌ Review: <b id="scoreReviewCount">0</b></span>
+        <span class="badge-pending">⏳ Remaining: <b id="scoreRemainingCount">0</b></span>
+      </div>
+      <div id="missedFilterNotice" class="missed-filter-notice hidden">
+        <span>⚠️ Reviewing Missed Cards Only</span>
+        <button id="exitMissedFilterBtn" class="btn-text">Exit to All Cards</button>
+      </div>
+    </div>
+
+    <!-- Countdown timer display -->
+    <div id="timerBarContainer" class="timer-bar-container hidden">
+      <div class="timer-meta">
+        <span>Time Remaining</span>
+        <span id="timerCountdownText" class="timer-seconds">15s</span>
+      </div>
+      <div class="timer-bar-track">
+        <div id="timerBarFill" class="timer-bar-fill"></div>
+      </div>
+    </div>
+
+    <!-- Flashcard study viewport -->
+    <main class="study-view" id="studyView">
+      <section class="deck-meta">
+        <div class="progress-info">
+          <span class="card-counter" id="cardCounter">Card 1 of 1</span>
+          <span class="category-badge" id="categoryBadge">General</span>
+        </div>
+        <div class="deck-tools">
+          <button id="ttsCurrentCardBtn" class="tool-btn" title="Speak text aloud (Web Speech API)">
+            <span id="ttsIcon">🔊</span>
+            <span id="ttsBtnLabel">Read Aloud</span>
+          </button>
+          <button id="shuffleBtn" class="tool-btn" title="Shuffle Cards">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 3 21 3 21 8"></polyline>
+              <line x1="4" y1="20" x2="21" y2="3"></line>
+              <polyline points="21 16 21 21 16 21"></polyline>
+              <line x1="15" y1="15" x2="21" y2="21"></line>
+              <line x1="4" y1="4" x2="9" y2="9"></line>
+            </svg>
+            Shuffle
+          </button>
+          <button id="resetDeckBtn" class="tool-btn" title="Restart to first card">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+              <path d="M3 3v5h5"></path>
+            </svg>
+            Restart
+          </button>
+          <button id="editCurrentCardBtn" class="tool-btn" title="Edit this card">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+            Edit
+          </button>
+          <button id="deleteCurrentCardBtn" class="tool-btn delete-btn" title="Delete this card">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            Delete
+          </button>
+        </div>
+      </section>
+
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+
+      <!-- 3D transform card scene -->
+      <div class="card-scene">
+        <div class="flashcard" id="flashcard" tabindex="0" role="button" aria-label="Flashcard. Click or press space to flip.">
+          <div class="card-face card-front">
+            <div class="card-face-top">
+              <span class="card-tag">QUESTION</span>
+              <button class="card-inner-tts-btn" title="Listen to Question" aria-label="Read Question aloud" id="ttsFrontBtn">
+                🔊
+              </button>
+            </div>
+            <div class="card-content">
+              <p id="cardQuestionText" class="card-text">Loading question...</p>
+            </div>
+            <div class="card-hint">
+              <span>💡 Click card or "Show Answer" button below</span>
+            </div>
+          </div>
+
+          <div class="card-face card-back">
+            <div class="card-face-top">
+              <span class="card-tag answer-tag">ANSWER</span>
+              <button class="card-inner-tts-btn" title="Listen to Answer" aria-label="Read Answer aloud" id="ttsBackBtn">
+                🔊
+              </button>
+            </div>
+            <div class="card-content">
+              <p id="cardAnswerText" class="card-text">Loading answer...</p>
+            </div>
+            <div class="card-hint">
+              <span>💡 Click card to flip back to question</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="study-controls">
+        <button id="prevBtn" class="btn btn-nav" title="Previous card (Left Arrow)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Previous
+        </button>
+
+        <button id="flipBtn" class="btn btn-action" title="Toggle Question / Answer (Spacebar)">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+            <path d="M21 21v-5h-5"></path>
+          </svg>
+          <span id="flipBtnText">Show Answer</span>
+        </button>
+
+        <button id="nextBtn" class="btn btn-nav" title="Next card (Right Arrow)">
+          Next
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Self-assessment options shown when card answer is visible -->
+      <div id="quizAssessmentSection" class="quiz-assessment-section hidden">
+        <p class="assessment-title">Did you answer correctly?</p>
+        <div class="assessment-buttons">
+          <button id="markWrongBtn" class="btn btn-assessment btn-wrong" title="Need Review (Shortcut: 1)">
+            ❌ Need Review <kbd>1</kbd>
+          </button>
+          <button id="markCorrectBtn" class="btn btn-assessment btn-correct" title="Got It Right (Shortcut: 2)">
+            ✅ Got It Right <kbd>2</kbd>
+          </button>
+        </div>
+      </div>
+
+      <div class="shortcuts-legend">
+        <span><kbd>←</kbd> Prev</span>
+        <span><kbd>Space</kbd> / <kbd>Enter</kbd> Flip</span>
+        <span><kbd>→</kbd> Next</span>
+        <span class="quiz-legend hidden" id="quizKeyLegend"><kbd>1</kbd> Review &nbsp; <kbd>2</kbd> Mastered</span>
+      </div>
+    </main>
+
+    <!-- Empty state view -->
+    <div class="empty-state hidden" id="emptyState">
+      <div class="empty-icon">🎴</div>
+      <h2>No flashcards in this deck!</h2>
+      <p id="emptyStateDesc">Create your first flashcard or restore the default sample deck to start studying.</p>
+      <div class="empty-actions">
+        <button id="emptyAddBtn" class="btn btn-primary">+ Add New Card</button>
+        <button id="restoreDefaultsBtn" class="btn btn-secondary">Restore Sample Deck</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quiz completion modal -->
+  <div class="modal-backdrop hidden" id="resultsModal">
+    <div class="modal-dialog results-dialog" role="dialog" aria-modal="true" aria-labelledby="resultsTitle">
+      <div class="modal-header">
+        <h3 id="resultsTitle">🎉 Quiz Completed!</h3>
+      </div>
+      <div class="modal-body text-center">
+        <div class="score-circle">
+          <span id="scorePercentage" class="score-percent">100%</span>
+          <span class="score-label">Score</span>
+        </div>
+        <p id="scoreFeedbackText" class="score-feedback">Outstanding job! You mastered every card!</p>
+        
+        <div class="results-stats-grid">
+          <div class="stat-box stat-mastered">
+            <span class="stat-number" id="finalMasteredCount">0</span>
+            <span class="stat-label">Mastered</span>
+          </div>
+          <div class="stat-box stat-review">
+            <span class="stat-number" id="finalReviewCount">0</span>
+            <span class="stat-label">Need Review</span>
+          </div>
+          <div class="stat-box stat-total">
+            <span class="stat-number" id="finalTotalCount">0</span>
+            <span class="stat-label">Total Cards</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer results-footer">
+        <button id="reviewMissedCardsBtn" class="btn btn-secondary hidden">
+          🔁 Review Missed Cards (<span id="missedBtnCount">0</span>)
+        </button>
+        <button id="restartQuizBtn" class="btn btn-primary">
+          🔄 Retake Full Quiz
+        </button>
+        <button id="closeResultsModalBtn" class="btn btn-secondary">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card editor modal -->
+  <div class="modal-backdrop hidden" id="cardModal">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add New Flashcard</h3>
+        <button id="closeModalBtn" class="btn-close" aria-label="Close dialog">&times;</button>
+      </div>
+      <form id="cardForm" class="modal-body">
+        <input type="hidden" id="cardIdInput" value="">
+        <div class="form-group">
+          <label for="cardCategoryInput">Deck / Subject</label>
+          <input type="text" id="cardCategoryInput" placeholder="e.g., Web Development, Science, History" maxlength="40" list="existingCategoriesList">
+          <datalist id="existingCategoriesList">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label for="cardQuestionInput">Question (Front) <span class="required">*</span></label>
+          <textarea id="cardQuestionInput" rows="4" placeholder="Enter your question or prompt..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="cardAnswerInput">Answer (Back) <span class="required">*</span></label>
+          <textarea id="cardAnswerInput" rows="4" placeholder="Enter the answer or explanation..." required></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="cancelModalBtn" class="btn btn-secondary">Cancel</button>
+          <button type="submit" id="saveCardBtn" class="btn btn-primary">Save Card</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Deck manager drawer -->
+  <div class="drawer-backdrop hidden" id="manageDrawer">
+    <div class="drawer-dialog" role="dialog" aria-modal="true" aria-labelledby="drawerTitle">
+      <div class="drawer-header">
+        <div>
+          <h3 id="drawerTitle">Deck Management</h3>
+          <p class="drawer-subtitle">Manage, search, export and import your study decks</p>
+        </div>
+        <button id="closeDrawerBtn" class="btn-close" aria-label="Close deck manager">&times;</button>
+      </div>
+      
+      <div class="drawer-toolbar">
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchCardsInput" placeholder="Search cards by question, answer, deck...">
+        </div>
+        <div class="drawer-actions">
+          <button id="exportJsonBtn" class="btn btn-sm btn-secondary" title="Export cards as JSON">Export JSON</button>
+          <button id="exportCsvBtn" class="btn btn-sm btn-secondary" title="Export cards as CSV spreadsheet">Export CSV</button>
+          <label class="btn btn-sm btn-secondary" title="Import cards from JSON or CSV" style="cursor: pointer; margin-bottom: 0;">
+            Import File
+            <input type="file" id="importDeckInput" accept=".json,.csv" style="display: none;">
+          </label>
+          <button id="drawerAddCardBtn" class="btn btn-sm btn-primary">+ Add Card</button>
+        </div>
+      </div>
+
+      <div class="drawer-body">
+        <div class="card-list" id="cardListContainer">
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <button id="drawerRestoreBtn" class="btn btn-sm btn-secondary">Restore Sample Deck</button>
+        <button id="clearAllBtn" class="btn btn-sm btn-danger">Delete All Cards</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
