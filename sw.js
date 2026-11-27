@@ -1,10 +1,10 @@
-// Service worker for offline asset caching and navigation fallback
-const CACHE_NAME = 'flashcards-cache-v1';
+const CACHE_NAME = 'linguaflow-cache-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './style.css',
+  './styles.css',
   './app.js',
+  './data.js',
   './manifest.json'
 ];
 
@@ -12,36 +12,41 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS_TO_CACHE);
-    })
+    }).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  // Purge outdated caches on activation
   event.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((keyList) => {
       return Promise.all(
-        keys.map((key) => {
+        keyList.map((key) => {
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  // Cache-first strategy with navigation fallback to index.html
+  // Stale-while-revalidate: respond from cache immediately, then update cache in background
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      return cachedResponse || fetch(event.request).catch(() => {
-        if (event.request.headers.get('accept').includes('text/html')) {
-          return caches.match('./index.html');
-        }
-      });
+      if (cachedResponse) {
+        fetch(event.request).then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, networkResponse);
+            });
+          }
+        }).catch(() => {});
+        return cachedResponse;
+      }
+      return fetch(event.request);
+    }).catch(() => {
+      return caches.match('./index.html');
     })
   );
 });
